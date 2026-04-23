@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
+import EditProfileModal from "@/components/EditProfileModal";
 
 const POSTS_URL = "https://functions.poehali.dev/efa8dba1-6d83-48de-86a8-1813a6ddfd76";
 const COMMENTS_URL = "https://functions.poehali.dev/99b2103f-7095-4f95-aaeb-dafa5e2885ba";
@@ -87,7 +88,9 @@ function formatTime(iso: string): string {
   return `${Math.floor(hrs / 24)} дн назад`;
 }
 
-export default function Index({ currentUser, onLogout }: IndexProps) {
+export default function Index({ currentUser: initialUser, token, onLogout }: IndexProps) {
+  const [currentUser, setCurrentUser] = useState(initialUser);
+  const [editOpen, setEditOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("feed");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -201,8 +204,24 @@ export default function Index({ currentUser, onLogout }: IndexProps) {
     showNotification("// ПОСТ ОТПРАВЛЕН В СЕТЬ //");
   };
 
+  const handleProfileSave = (updated: AuthUser) => {
+    setCurrentUser(updated);
+    setProfile(prev => prev ? { ...prev, user: updated } : prev);
+    setEditOpen(false);
+    showNotification("// ПРОФИЛЬ ОБНОВЛЁН //");
+  };
+
   return (
     <div className="min-h-screen grid-bg relative">
+      {editOpen && (
+        <EditProfileModal
+          user={currentUser}
+          token={token}
+          onClose={() => setEditOpen(false)}
+          onSave={handleProfileSave}
+        />
+      )}
+
       <div className="fixed top-20 left-10 w-96 h-96 rounded-full opacity-10 pointer-events-none"
         style={{ background: "radial-gradient(circle, #00bfff 0%, transparent 70%)", filter: "blur(60px)" }} />
       <div className="fixed bottom-20 right-10 w-80 h-80 rounded-full opacity-10 pointer-events-none"
@@ -486,25 +505,32 @@ export default function Index({ currentUser, onLogout }: IndexProps) {
 
                   <div className="px-6 pb-6 relative">
                     <div className="flex items-end gap-4 -mt-12 mb-4 flex-wrap">
-                      <div className="holo-avatar w-24 h-24 relative animate-float">
-                        <img src={profile.user.avatar_url} alt="avatar" className="w-full h-full object-cover rounded-full" />
+                      <div className="holo-avatar w-24 h-24 relative animate-float cursor-pointer" onClick={() => setEditOpen(true)}>
+                        <img src={currentUser.avatar_url} alt="avatar" className="w-full h-full object-cover rounded-full" />
+                        <div className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                          style={{ background: "rgba(0,0,0,0.5)" }}>
+                          <Icon name="Camera" size={18} className="text-cyan-400" />
+                        </div>
                       </div>
                       <div className="pb-1">
-                        <h1 className="font-orbitron font-black text-2xl glow-text-blue glitch-text" data-text={profile.user.name}>
-                          {profile.user.name}
+                        <h1 className="font-orbitron font-black text-2xl glow-text-blue glitch-text" data-text={currentUser.name}>
+                          {currentUser.name}
                         </h1>
-                        <p className="text-sm font-ibm text-muted-foreground">{profile.user.handle}</p>
+                        <p className="text-sm font-ibm text-muted-foreground">{currentUser.handle}</p>
                       </div>
                       <div className="ml-auto pb-1">
-                        <button className="neon-btn px-5 py-2 rounded-lg font-orbitron text-xs tracking-widest text-blue-300 transition-all">
+                        <button
+                          onClick={() => setEditOpen(true)}
+                          className="neon-btn px-5 py-2 rounded-lg font-orbitron text-xs tracking-widest text-blue-300 transition-all flex items-center gap-2">
+                          <Icon name="Pencil" size={12} />
                           РЕДАКТИРОВАТЬ //
                         </button>
                       </div>
                     </div>
 
-                    {profile.user.bio && (
+                    {currentUser.bio && (
                       <p className="font-ibm text-sm text-foreground/80 leading-relaxed mb-4 max-w-lg">
-                        {profile.user.bio}
+                        {currentUser.bio}
                       </p>
                     )}
 
