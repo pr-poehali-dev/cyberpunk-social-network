@@ -1,0 +1,25 @@
+{
+  "tests": [
+    {
+      "name": "Register new user via action",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "register", "name": "TEST_USER", "handle": "test_nexus_888", "password": "cyber2077"},
+      "expectedStatus": 201
+    },
+    {
+      "name": "Login wrong password",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "login", "handle": "test_nexus_888", "password": "wrongpass"},
+      "expectedStatus": 401
+    },
+    {
+      "name": "Login success",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "login", "handle": "test_nexus_888", "password": "cyber2077"},
+      "expectedStatus": 200
+    }
+  ]
+}

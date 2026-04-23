@@ -5,7 +5,6 @@ const POSTS_URL = "https://functions.poehali.dev/efa8dba1-6d83-48de-86a8-1813a6d
 const COMMENTS_URL = "https://functions.poehali.dev/99b2103f-7095-4f95-aaeb-dafa5e2885ba";
 const PROFILE_URL = "https://functions.poehali.dev/64f1c298-8600-4d89-88fb-c05efe59fd40";
 
-const CURRENT_USER_ID = 1;
 const BANNER_URL = "https://cdn.poehali.dev/projects/e3101b69-ea70-472c-90da-0df04c7ea68d/files/c698a86e-c01e-490e-9dcf-2a8cbd2120b8.jpg";
 
 const ACTIVITY_FEED = [
@@ -16,12 +15,32 @@ const ACTIVITY_FEED = [
   { id: 5, icon: "UserPlus", color: "text-green-400", text: "Новый подписчик: GHOST_//77", time: "15 мин" },
 ];
 
+interface AuthUser {
+  id: number;
+  name: string;
+  handle: string;
+  avatar_url: string;
+  bio: string;
+  status: string;
+  posts_count: number;
+  followers_count: number;
+  following_count: number;
+  rating: number;
+  tags: string[];
+}
+
 interface User {
   id: number;
   name: string;
   handle: string;
   avatar_url: string;
   status: string;
+}
+
+interface IndexProps {
+  currentUser: AuthUser;
+  token: string;
+  onLogout: () => void;
 }
 
 interface Post {
@@ -68,7 +87,7 @@ function formatTime(iso: string): string {
   return `${Math.floor(hrs / 24)} дн назад`;
 }
 
-export default function Index() {
+export default function Index({ currentUser, onLogout }: IndexProps) {
   const [activeTab, setActiveTab] = useState<Tab>("feed");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,21 +107,21 @@ export default function Index() {
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`${POSTS_URL}/?user_id=${CURRENT_USER_ID}`);
+    const res = await fetch(`${POSTS_URL}/?user_id=${currentUser.id}`);
     const data = await res.json();
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
     setPosts(parsed.posts || []);
     setLoading(false);
-  }, []);
+  }, [currentUser.id]);
 
   const loadProfile = useCallback(async () => {
     setProfileLoading(true);
-    const res = await fetch(`${PROFILE_URL}/?user_id=${CURRENT_USER_ID}`);
+    const res = await fetch(`${PROFILE_URL}/?user_id=${currentUser.id}`);
     const data = await res.json();
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
     setProfile(parsed);
     setProfileLoading(false);
-  }, []);
+  }, [currentUser.id]);
 
   useEffect(() => {
     loadPosts();
@@ -135,7 +154,7 @@ export default function Index() {
     const res = await fetch(`${POSTS_URL}/${postId}/like`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: CURRENT_USER_ID }),
+      body: JSON.stringify({ user_id: currentUser.id }),
     });
     const data = await res.json();
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
@@ -152,7 +171,7 @@ export default function Index() {
     const res = await fetch(`${COMMENTS_URL}/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ post_id: postId, user_id: CURRENT_USER_ID, text: newComment }),
+      body: JSON.stringify({ post_id: postId, user_id: currentUser.id, text: newComment }),
     });
     const data = await res.json();
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
@@ -171,7 +190,7 @@ export default function Index() {
     const res = await fetch(`${POSTS_URL}/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: newPostText, user_id: CURRENT_USER_ID, tags: [] }),
+      body: JSON.stringify({ content: newPostText, user_id: currentUser.id, tags: [] }),
     });
     const data = await res.json();
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
@@ -228,13 +247,14 @@ export default function Index() {
 
         <div className="flex items-center gap-3">
           <div className="relative notification-ping w-2 h-2 rounded-full bg-cyan-400" />
-          {profile?.user?.avatar_url ? (
-            <div className="holo-avatar w-8 h-8 cursor-pointer" onClick={() => setActiveTab("profile")}>
-              <img src={profile.user.avatar_url} alt="me" className="w-full h-full object-cover rounded-full" />
-            </div>
-          ) : (
-            <div className="holo-avatar w-8 h-8 cursor-pointer bg-muted rounded-full" onClick={() => setActiveTab("profile")} />
-          )}
+          <div className="holo-avatar w-8 h-8 cursor-pointer" onClick={() => setActiveTab("profile")}>
+            <img src={currentUser.avatar_url} alt="me" className="w-full h-full object-cover rounded-full" />
+          </div>
+          <button onClick={onLogout}
+            className="neon-btn px-3 py-1.5 rounded-lg font-orbitron text-[10px] tracking-widest text-muted-foreground hover:text-red-400 transition-colors"
+            title="Выйти из системы">
+            <Icon name="LogOut" size={13} />
+          </button>
         </div>
       </header>
 
