@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "Get posts feed",
+      "method": "GET",
+      "path": "/?user_id=1",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Create new post",
+      "method": "POST",
+      "path": "/",
+      "body": {"content": "Тест из матрицы", "user_id": 1, "tags": ["#TEST"]},
+      "expectedStatus": 201
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "Get user profile",
+      "method": "GET",
+      "path": "/?user_id=1",
+      "expectedStatus": 200
+    }
+  ]
+}

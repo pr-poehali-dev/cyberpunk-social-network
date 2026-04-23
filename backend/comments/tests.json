@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "Get comments for post",
+      "method": "GET",
+      "path": "/?post_id=1",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Add comment",
+      "method": "POST",
+      "path": "/",
+      "body": {"post_id": 1, "user_id": 1, "text": "Тест комментария из киберпространства"},
+      "expectedStatus": 201
+    }
+  ]
+}
